@@ -1,0 +1,8 @@
+{
+  "dirs": [
+    {
+      "dir": "/tmp",
+      "exclude_files": [".*.txt"]
+    }
+  ]
+}
