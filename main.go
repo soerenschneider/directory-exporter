@@ -245,7 +245,7 @@ func watchDirs() {
 func parseFlags() {
 	var confFile *string
 	confFile = flag.String("config", defaultConfigFile, "path to the JSON config file")
-	debug := flag.Bool("debug", true, "sets log level to debug")
+	debug := flag.Bool("debug", false, "sets log level to debug")
 	version := flag.Bool("version", false, "Print version and exit")
 	prometheusListen = *flag.String("listen", defaultPrometheusListen, "Listener for prometheus metrics handler")
 	flag.Parse()
