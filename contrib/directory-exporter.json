@@ -2,6 +2,7 @@
   "dirs": [
     {
       "dir": "/tmp",
+      "frequency": 120,
       "exclude_files": [".*.txt"]
     }
   ]

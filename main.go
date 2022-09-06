@@ -24,6 +24,7 @@ const (
 	defaultTickerFrequency  = 30 * time.Second
 	defaultNamespace        = "directory_exporter"
 	defaultConfigFile       = "directory-exporter.json"
+	minFrequencySeconds     = 30
 )
 
 var (
@@ -62,10 +63,10 @@ var (
 		Help: "Continuous heartbeat of the exporter",
 	})
 
-	dirScanFrequency      = time.Duration(5) * time.Minute
-	prometheusListen      = defaultPrometheusListen
-	configuredDirectories = make(map[string]*DirConfig)
-	config                Config
+	dirScanFrequencySeconds = 1800
+	prometheusListen        = defaultPrometheusListen
+	configuredDirectories   = make(map[string]*DirConfig)
+	config                  Config
 
 	BuildVersion string
 	CommitHash   string
@@ -76,11 +77,11 @@ type Config struct {
 }
 
 type DirConfig struct {
-	Frequency         *time.Duration `json:"frequency,omitempty"`
-	Dir               string         `json:"dir"`
-	OnlyFiles         bool           `json:"only_files"`
-	ExcludeFiles      []string       `json:"exclude_files"`
-	IncludeFiles      []string       `json:"include_files"`
+	FrequencySeconds  int      `json:"frequency,omitempty"`
+	Dir               string   `json:"dir"`
+	OnlyFiles         bool     `json:"only_files"`
+	ExcludeFiles      []string `json:"exclude_files"`
+	IncludeFiles      []string `json:"include_files"`
 	NextScan          time.Time
 	RegexExcludeFiles []regexp.Regexp
 	RegexIncludeFiles []regexp.Regexp
@@ -110,8 +111,8 @@ func updateMetricsForDir(directory string) {
 		if dirConf == nil {
 			log.Warn().Msgf("Building default dir config for directory '%s'. This should not happen.", directory)
 			dirConf = &DirConfig{
-				Frequency: &dirScanFrequency,
-				Dir:       directory,
+				FrequencySeconds: dirScanFrequencySeconds,
+				Dir:              directory,
 			}
 			configuredDirectories[directory] = dirConf
 		}
@@ -126,7 +127,7 @@ func updateMetricsForDir(directory string) {
 		fileCnt = -1
 	}
 
-	dirConf.NextScan = time.Now().Add(*dirConf.Frequency)
+	dirConf.NextScan = time.Now().Add(time.Duration(dirConf.FrequencySeconds) * time.Second)
 
 	metricScanTimeTaken.WithLabelValues(dirConf.Dir).Set(scanTimeTotal.Seconds())
 	metricDirFileCount.WithLabelValues(dirConf.Dir).Set(float64(fileCnt))
@@ -200,8 +201,8 @@ func watchDirs() {
 	}
 	defer watcher.Close()
 
-	for dir, _ := range configuredDirectories {
-		log.Info().Msgf("Watching dir '%s'", dir)
+	for dir, dirConf := range configuredDirectories {
+		log.Info().Msgf("Watching dir '%s', updating each %d seconds", dir, dirConf.FrequencySeconds)
 		err := watcher.Add(dir)
 		if err != nil {
 			log.Fatal().Err(err).Msgf("Can not watch dir '%s'", dir)
@@ -319,8 +320,8 @@ func main() {
 
 	nextScan := time.Now()
 	for _, dir := range config.Dirs {
-		if dir.Frequency == nil {
-			dir.Frequency = &dirScanFrequency
+		if dir.FrequencySeconds <= minFrequencySeconds {
+			dir.FrequencySeconds = dirScanFrequencySeconds
 		}
 		dir.NextScan = nextScan
 
