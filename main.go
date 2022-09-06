@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -245,8 +246,14 @@ func parseFlags() {
 	var confFile *string
 	confFile = flag.String("config", defaultConfigFile, "path to the JSON config file")
 	debug := flag.Bool("debug", true, "sets log level to debug")
+	version := flag.Bool("version", false, "Print version and exit")
 	prometheusListen = *flag.String("listen", defaultPrometheusListen, "Listener for prometheus metrics handler")
 	flag.Parse()
+
+	if *version {
+		fmt.Printf("%s (commit: %s)", BuildVersion, CommitHash)
+		os.Exit(0)
+	}
 
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	if *debug {
@@ -305,8 +312,8 @@ func startPromHandler() {
 }
 
 func main() {
-	log.Info().Msgf("directory-exporter %s, commit %s", BuildVersion, CommitHash)
 	parseFlags()
+	log.Info().Msgf("directory-exporter %s, commit %s", BuildVersion, CommitHash)
 
 	startPromHandler()
 
