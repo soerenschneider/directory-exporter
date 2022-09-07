@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/soerenschneider/directory-exporter/compare/v1.1.0...v1.2.0) (2022-09-07)
+
+
+### Features
+
+* add metrics about file/dir sizes ([48700df](https://github.com/soerenschneider/directory-exporter/commit/48700df0b3f538930e46ff3838a02427fad570cf))
+
 ## [1.1.0](https://github.com/soerenschneider/directory-exporter/compare/v1.0.0...v1.1.0) (2022-09-06)
 
 
