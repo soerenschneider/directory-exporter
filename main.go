@@ -34,6 +34,18 @@ var (
 		Help:      "The total number of files found recursively under given directory",
 	}, []string{"dir"})
 
+	metricDirFilesSize = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: defaultNamespace,
+		Name:      "file_size_bytes",
+		Help:      "The size of all files that have been included or not been excluded",
+	}, []string{"dir"})
+
+	metricDirSize = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: defaultNamespace,
+		Name:      "dir_size_bytes",
+		Help:      "The size of all files in the directory, even excluded files",
+	}, []string{"dir"})
+
 	metricDirExcludedFileCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: defaultNamespace,
 		Name:      "excluded_files_total",
@@ -87,6 +99,13 @@ type DirConfig struct {
 	RegexIncludeFiles []regexp.Regexp
 }
 
+type DirectoryInfo struct {
+	FilesSize     int64 // Size of all included / not excluded files
+	DirSize       int64 // Size of all files encountered in the dir
+	FileCount     int32 // Amount of included / not excluded files
+	ExcludedFiles int32 // Amount of explicitly excluded files
+}
+
 func updateMetricsForDir(directory string) {
 	dirConf := configuredDirectories[directory]
 
@@ -119,23 +138,31 @@ func updateMetricsForDir(directory string) {
 	}
 
 	scanTimeStart := time.Now()
-	fileCnt, err := getFilesCount(directory, dirConf)
+	dirInfo, err := gatherDirectoryInfo(directory, dirConf)
 	scanTimeTotal := time.Now().Sub(scanTimeStart)
 	if err != nil {
 		metricDirErrors.WithLabelValues(dirConf.Dir).Inc()
 		log.Error().Err(err).Msgf("Error getting count of files for '%s'", dirConf.Dir)
-		fileCnt = -1
+
+		dirInfo.DirSize = -1
+		dirInfo.ExcludedFiles = -1
+		dirInfo.FileCount = -1
+		dirInfo.FilesSize = -1
 	}
 
 	dirConf.NextScan = time.Now().Add(time.Duration(dirConf.FrequencySeconds) * time.Second)
 
-	metricScanTimeTaken.WithLabelValues(dirConf.Dir).Set(scanTimeTotal.Seconds())
-	metricDirFileCount.WithLabelValues(dirConf.Dir).Set(float64(fileCnt))
+	metricDirFileCount.WithLabelValues(dirConf.Dir).Set(float64(dirInfo.FileCount))
+	metricDirExcludedFileCount.WithLabelValues(dirConf.Dir).Set(float64(dirInfo.ExcludedFiles))
+	metricDirSize.WithLabelValues(dirConf.Dir).Set(float64(dirInfo.DirSize))
+	metricDirFilesSize.WithLabelValues(dirConf.Dir).Set(float64(dirInfo.FilesSize))
 	metricNextScan.WithLabelValues(dirConf.Dir).Set(float64(dirConf.NextScan.Unix()))
+	metricScanTimeTaken.WithLabelValues(dirConf.Dir).Set(scanTimeTotal.Seconds())
 }
 
-func getFilesCount(directory string, dirConfig *DirConfig) (int, error) {
-	cnt := 0
+func gatherDirectoryInfo(directory string, dirConfig *DirConfig) (*DirectoryInfo, error) {
+	dirInfo := &DirectoryInfo{}
+
 	if len(dirConfig.RegexExcludeFiles) > 0 {
 		metricDirExcludedFileCount.WithLabelValues(directory).Set(0)
 	}
@@ -145,6 +172,8 @@ func getFilesCount(directory string, dirConfig *DirConfig) (int, error) {
 			log.Error().Err(err).Msgf("Error iterating path '%s'", path)
 			metricDirErrors.WithLabelValues(directory).Inc()
 		}
+
+		dirInfo.DirSize += info.Size()
 
 		if dirConfig.OnlyFiles {
 			fileInfo, err := os.Stat(path)
@@ -159,7 +188,8 @@ func getFilesCount(directory string, dirConfig *DirConfig) (int, error) {
 		if len(dirConfig.ExcludeFiles) > 0 {
 			for _, regex := range dirConfig.RegexExcludeFiles {
 				if regex.MatchString(path) {
-					metricDirExcludedFileCount.WithLabelValues(directory).Inc()
+
+					dirInfo.ExcludedFiles += 1
 					return nil
 				}
 			}
@@ -168,7 +198,7 @@ func getFilesCount(directory string, dirConfig *DirConfig) (int, error) {
 		if len(dirConfig.IncludeFiles) > 0 {
 			for _, regex := range dirConfig.RegexIncludeFiles {
 				if regex.MatchString(path) {
-					cnt += 1
+					dirInfo.FileCount += 1
 					return nil
 				}
 			}
@@ -176,11 +206,12 @@ func getFilesCount(directory string, dirConfig *DirConfig) (int, error) {
 			return nil
 		}
 
-		cnt += 1
+		dirInfo.FileCount += 1
+		dirInfo.FilesSize += info.Size()
 		return nil
 	})
 
-	return cnt, err
+	return dirInfo, err
 }
 
 func scanDirectories() {
