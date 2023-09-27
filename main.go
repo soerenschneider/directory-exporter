@@ -163,6 +163,7 @@ func updateMetricsForDir(directory string) {
 	metricScanTimeTaken.WithLabelValues(dirConf.Dir).Set(scanTimeTotal.Seconds())
 }
 
+// nolint: cyclop
 func gatherDirectoryInfo(directory string, dirConfig *DirConfig) (*DirectoryInfo, error) {
 	dirInfo := &DirectoryInfo{}
 
@@ -227,6 +228,7 @@ func scanDirectories() {
 	}
 }
 
+// nolint: cyclop
 func watchDirs(ctx context.Context) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
