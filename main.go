@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"net/http"
@@ -323,20 +324,28 @@ func buildRegexes() {
 }
 
 func startPromHandler() {
-	http.Handle("/metrics", promhttp.Handler())
-	go func() {
-		err := http.ListenAndServe(prometheusListen, nil)
-		if err != nil {
-			log.Fatal().Err(err).Msgf("Could not start listener")
-		}
-	}()
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+
+	server := http.Server{
+		Addr:              prometheusListen,
+		Handler:           mux,
+		ReadTimeout:       3 * time.Second,
+		ReadHeaderTimeout: 3 * time.Second,
+		WriteTimeout:      3 * time.Second,
+		IdleTimeout:       30 * time.Second,
+	}
+
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatal().Err(err).Msgf("Can not start metrics server")
+	}
 }
 
 func main() {
 	parseFlags()
 	log.Info().Msgf("directory-exporter %s, commit %s", BuildVersion, CommitHash)
 
-	startPromHandler()
+	go startPromHandler()
 
 	nextScan := time.Now()
 	for _, dir := range config.Dirs {
