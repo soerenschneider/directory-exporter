@@ -306,10 +306,7 @@ func buildRegexes() {
 			dirConf.RegexExcludeFiles = make([]regexp.Regexp, 0, len(dirConf.ExcludeFiles))
 			log.Info().Msgf("Building %d exclude regexes for dir '%s'", len(dirConf.ExcludeFiles), dirConf.Dir)
 			for _, exclusion := range dirConf.ExcludeFiles {
-				reg, err := regexp.Compile(exclusion)
-				if err != nil {
-					log.Fatal().Err(err).Msgf("Invalid 'exclude' pattern supplied")
-				}
+				reg := regexp.MustCompile(exclusion)
 				dirConf.RegexExcludeFiles = append(dirConf.RegexExcludeFiles, *reg)
 			}
 		}
@@ -318,10 +315,7 @@ func buildRegexes() {
 			dirConf.RegexIncludeFiles = make([]regexp.Regexp, 0, len(dirConf.IncludeFiles))
 			log.Info().Msgf("Building %d include regexes for dir '%s'", len(dirConf.IncludeFiles), dirConf.Dir)
 			for _, inclusion := range dirConf.IncludeFiles {
-				reg, err := regexp.Compile(inclusion)
-				if err != nil {
-					log.Fatal().Err(err).Msgf("Invalid 'include' pattern supplied")
-				}
+				reg := regexp.MustCompile(inclusion)
 				dirConf.RegexIncludeFiles = append(dirConf.RegexIncludeFiles, *reg)
 			}
 		}
