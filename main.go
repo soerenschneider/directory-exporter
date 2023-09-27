@@ -141,7 +141,7 @@ func updateMetricsForDir(directory string) {
 
 	scanTimeStart := time.Now()
 	dirInfo, err := gatherDirectoryInfo(directory, dirConf)
-	scanTimeTotal := time.Now().Sub(scanTimeStart)
+	scanTimeTotal := time.Since(scanTimeStart)
 	if err != nil {
 		metricDirErrors.WithLabelValues(dirConf.Dir).Inc()
 		log.Error().Err(err).Msgf("Error getting count of files for '%s'", dirConf.Dir)
@@ -219,7 +219,7 @@ func gatherDirectoryInfo(directory string, dirConfig *DirConfig) (*DirectoryInfo
 func scanDirectories() {
 	for dir, dirConf := range configuredDirectories {
 		if dirConf.NextScan.After(time.Now()) {
-			nextScan := dirConf.NextScan.Sub(time.Now())
+			nextScan := time.Until(dirConf.NextScan)
 			log.Debug().Msgf("Ignoring dir '%s' for '%v'", dir, nextScan)
 		} else {
 			updateMetricsForDir(dir)
