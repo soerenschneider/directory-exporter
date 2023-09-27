@@ -190,7 +190,6 @@ func gatherDirectoryInfo(directory string, dirConfig *DirConfig) (*DirectoryInfo
 		if len(dirConfig.ExcludeFiles) > 0 {
 			for _, regex := range dirConfig.RegexExcludeFiles {
 				if regex.MatchString(path) {
-
 					dirInfo.ExcludedFiles += 1
 					return nil
 				}
@@ -248,19 +247,17 @@ func watchDirs(ctx context.Context) error {
 	for {
 		select {
 		case event, ok := <-watcher.Events:
-			if !ok {
-				return
+			if ok {
+				path := filepath.Dir(event.Name)
+				log.Debug().Msgf("Update detected on path '%s' (%s)", path, event.Name)
+				updateMetricsForDir(path)
 			}
-			path := filepath.Dir(event.Name)
-			log.Debug().Msgf("Update detected on path '%s' (%s)", path, event.Name)
-			updateMetricsForDir(path)
 
 		case err, ok := <-watcher.Errors:
-			if !ok {
-				return
+			if ok {
+				metricDirErrors.WithLabelValues("UNSPECIFIED").Inc()
+				log.Error().Msgf("Error while watching configuredDirectories: %v", err)
 			}
-			metricDirErrors.WithLabelValues("UNSPECIFIED").Inc()
-			log.Error().Msgf("Error while watching configuredDirectories: %v", err)
 
 		case <-ticker.C:
 			metricHeartbeat.SetToCurrentTime()
