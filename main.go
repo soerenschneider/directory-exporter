@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -226,10 +227,10 @@ func scanDirectories() {
 	}
 }
 
-func watchDirs() {
+func watchDirs(ctx context.Context) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatal().Err(err).Msg("Could not build watcher")
+		return err
 	}
 	defer watcher.Close()
 
@@ -242,8 +243,6 @@ func watchDirs() {
 	}
 
 	ticker := time.NewTicker(defaultTickerFrequency)
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 	scanDirectories()
 
 	for {
@@ -267,10 +266,10 @@ func watchDirs() {
 			metricHeartbeat.SetToCurrentTime()
 			scanDirectories()
 
-		case <-quit:
+		case <-ctx.Done():
 			log.Info().Msg("Caught signal, stopping.")
 			ticker.Stop()
-			return
+			return nil
 		}
 	}
 }
@@ -368,5 +367,15 @@ func main() {
 		copied := dir
 		configuredDirectories[watchedDir] = copied
 	}
-	watchDirs()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	if err := watchDirs(ctx); err != nil {
+		log.Fatal().Err(err).Msg("watching dirs failed")
+	}
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
+
+	<-sig
+	cancel()
 }
