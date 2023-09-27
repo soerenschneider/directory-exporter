@@ -272,8 +272,7 @@ func watchDirs(ctx context.Context) error {
 }
 
 func parseFlags() {
-	var confFile *string
-	confFile = flag.String("config", defaultConfigFile, "path to the JSON config file")
+	confFile := flag.String("config", defaultConfigFile, "path to the JSON config file")
 	debug := flag.Bool("debug", false, "sets log level to debug")
 	version := flag.Bool("version", false, "Print version and exit")
 	prometheusListen = *flag.String("listen", defaultPrometheusListen, "Listener for prometheus metrics handler")
@@ -294,8 +293,7 @@ func parseFlags() {
 		log.Fatal().Err(err).Msgf("Error when trying to open config file '%s'", *confFile)
 	}
 
-	err = json.Unmarshal(content, &config)
-	if err != nil {
+	if err = json.Unmarshal(content, &config); err != nil {
 		log.Fatal().Err(err).Msg("Error unmarshalling config")
 	}
 
