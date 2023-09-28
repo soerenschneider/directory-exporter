@@ -95,8 +95,8 @@ type DirConfig struct {
 	FrequencySeconds  int      `json:"frequency,omitempty"`
 	Dir               string   `json:"dir"`
 	OnlyFiles         bool     `json:"only_files"`
-	ExcludeFiles      []string `json:"exclude_files"`
-	IncludeFiles      []string `json:"include_files"`
+	ExcludeFiles      []string `json:"exclude_files,omitempty"`
+	IncludeFiles      []string `json:"include_files,omitempty"`
 	NextScan          time.Time
 	RegexExcludeFiles []regexp.Regexp
 	RegexIncludeFiles []regexp.Regexp
