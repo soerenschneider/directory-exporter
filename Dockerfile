@@ -1,5 +1,5 @@
 
-FROM golang:1.21.1 as builder
+FROM golang:1.21.2 as builder
 WORKDIR /build/
 ADD . /build/
 RUN go build -ldflags="-X main.BuildVersion=$(git describe --tags --abbrev=0 || echo dev) -X main.CommitHash=$(git rev-parse HEAD)" -o directory-exporter main.go
