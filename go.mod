@@ -3,9 +3,9 @@ module github.com/soerenschneider/directory-exporter
 go 1.23.0
 
 require (
-	github.com/fsnotify/fsnotify v1.6.0
 	github.com/prometheus/client_golang v1.23.2
-	github.com/rs/zerolog v1.31.0
+	github.com/fsnotify/fsnotify v1.9.0
+	github.com/rs/zerolog v1.34.0
 )
 
 require (
