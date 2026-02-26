@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.1](https://github.com/soerenschneider/directory-exporter/compare/v1.2.0...v1.2.1) (2026-02-24)
+
+
+### Bug Fixes
+
+* **deps:** bump github.com/prometheus/client_golang ([e654761](https://github.com/soerenschneider/directory-exporter/commit/e65476112cd93262b53533202748caaaee070037))
+* **deps:** bump github.com/prometheus/client_golang from 1.16.0 to 1.17.0 ([03f75a4](https://github.com/soerenschneider/directory-exporter/commit/03f75a45790f764f227088993c7b6c211c6df8f7))
+* **deps:** bump github.com/rs/zerolog from 1.30.0 to 1.31.0 ([0b26c89](https://github.com/soerenschneider/directory-exporter/commit/0b26c8955d9d75e8f33d68aa1de13d84c27a262b))
+* **deps:** bump github.com/rs/zerolog from 1.30.0 to 1.31.0 ([41774d3](https://github.com/soerenschneider/directory-exporter/commit/41774d3894682a079bda0ebbb3a692bea0b0c4cc))
+* **deps:** bump golang from 1.21.1 to 1.21.2 ([91c9eaa](https://github.com/soerenschneider/directory-exporter/commit/91c9eaa60682ed800c47bb902bb0d56223c64e32))
+* **deps:** bump golang from 1.21.1 to 1.21.2 ([7ac9a8c](https://github.com/soerenschneider/directory-exporter/commit/7ac9a8cdaefde0e0ef1ee55979958e22da796f9f))
+* **deps:** bump golang from 1.21.2 to 1.21.3 ([1556831](https://github.com/soerenschneider/directory-exporter/commit/15568314ed0d10c63687ff9ab6a3fbf7f716eacc))
+* **deps:** bump golang from 1.21.2 to 1.21.3 ([325a453](https://github.com/soerenschneider/directory-exporter/commit/325a453351c4aa6743fcdfb23c139c806aba2d98))
+
 ## [1.2.0](https://github.com/soerenschneider/directory-exporter/compare/v1.1.0...v1.2.0) (2022-09-07)
 
 
